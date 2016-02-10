@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="./controller/kraken.controller.js"></script>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <link rel="stylesheet" href="./assets/main.css">
+  </head>
+  <body>
+
+
+    <div id="header" ondragstart="return false;" ondrop="return false;">
+      <div id="progress__bar"></div>
+      <div id="window__close"></div>
+    </div>
+
+  <div id="holder">
+    <div class="holder__content">
+      Drag files here
+    </div>
+  </div>
+
+  <div id="auth_overlay">
+      <form class="auth_form" method="post">
+          <label for="userKey">API Key</label>
+          <input type="text" name="key" id="userKey">
+
+          <label for="userSecret">API Secret</label>
+          <input type="text" name="secret" id="userSecret">
+          <button type="button" name="button" id="userSubmit" onclick="enterKey()">Apply</button>
+      </form>
+  </div>
+
+  <script>
+    init();
+  </script>
+
+  </body>
+</html>
