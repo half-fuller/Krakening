@@ -10,7 +10,10 @@ var Kraken = require('kraken'),
 
 var count = 0,
 		kraken,
-		home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+		appData = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+		appData = (process.platform == 'win32') ? appData + "/AppData/Local/Krakening" : appData + "/Library/Application\ Support/Krakening"
+
+console.log(home);
 
 var template = [
   {
@@ -76,7 +79,7 @@ var count = 0,
 				document.getElementsByClassName('holder__content').text = "Please restart app and enter key";
 				return;
 			} else {
-				fs.writeFile(home + '/Library/Application\ Support/Krakening/Simsim', JSON.stringify(kraken), 'utf8', (err, data) => {
+				fs.writeFile(appData + '/Simsim', JSON.stringify(kraken), 'utf8', (err, data) => {
 					if(err) console.log(err);
 					setup();
 				});
@@ -130,10 +133,9 @@ var progressBar = function (length){
 
 var krakenize = function (file, length) {
 
-
-
 	var opts = {	file: fs.createReadStream(file.path),
 		wait: true
+		//dev: true
 	};
 
 	var filename = path.format({

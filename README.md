@@ -5,5 +5,5 @@ A minimalistic desktop application version of kraken.io. This is an unoffical ve
 ### Setup
 1. Pull Repository
 2. Install dependencies: npm install
-3. A: Start up in pre-builder: npm start
-3. B: Package application: npm package
+3. Start app: npm start
+4. Package app: npm package
