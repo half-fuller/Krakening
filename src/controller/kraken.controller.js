@@ -9,16 +9,23 @@ var Kraken = require('kraken'),
 	Menu = remote.require('menu');
 
 var count = 0,
+		totalFileSize = 0,
+		totalKrakedSize = 0,
+		totalSizeSaved = 0,
 		kraken,
 		appData = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-		appData = (process.platform == 'win32') ? appData + "/AppData/Local/Krakening" : appData + "/Library/Application\ Support/Krakening"
-
-console.log(home);
+		appData = (process.platform == 'win32') ? appData + "/AppData/Local/Krakening" : appData + "/Library/Application\ Support/Krakening";
+		var home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 
 var template = [
   {
     label: 'Krakening',
     submenu: [
+			{
+        label: 'Close',
+        accelerator: 'Command+W',
+        selector: 'performClose:'
+      },
       {
         label: 'Quit',
         accelerator: 'Command+Q',
@@ -67,32 +74,27 @@ menu = Menu.buildFromTemplate(template);
 
 Menu.setApplicationMenu(menu);
 
-
-var count = 0,
-		kraken,
-		home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-
-		var enterKey = function(){
-			kraken = { api_key: document.getElementById('userKey').value,
-								 api_secret: document.getElementById('userSecret').value};
-		 if(kraken.api_key === '' || kraken.api_secret ==='' ){
-				document.getElementsByClassName('holder__content').text = "Please restart app and enter key";
-				return;
-			} else {
-				fs.writeFile(appData + '/Simsim', JSON.stringify(kraken), 'utf8', (err, data) => {
-					if(err) console.log(err);
-					setup();
-				});
-			}
-		};
+var enterKey = function(){
+	kraken = { api_key: document.getElementById('userKey').value,
+						 api_secret: document.getElementById('userSecret').value};
+ if(kraken.api_key === '' || kraken.api_secret ==='' ){
+		document.getElementsByClassName('holder__content').text = "Please restart app and enter key";
+		return;
+	} else {
+		fs.writeFile(appData + '/Simsim', JSON.stringify(kraken), 'utf8', (err, data) => {
+			if(err) console.log(err);
+			setup();
+		});
+	}
+};
 
 var verifyKey = function () {
-	fs.access( home + '/Library/Application\ Support/Krakening/Simsim', [fs.F_OK], function(err) {
+	fs.access( appData + '/Simsim', [fs.F_OK], function(err) {
 		if(err){
 			console.log('No Key');
 			document.getElementById('auth_overlay').style.display = 'flex';
 		} else {
-			fs.readFile(home + '/Library/Application\ Support/Krakening/Simsim', 'utf8', (err, data) => {
+			fs.readFile(appData + '/Simsim', 'utf8', (err, data) => {
 				if(err){return console.log(err);}
 
 				var key = {};
@@ -110,6 +112,19 @@ var verifyKey = function () {
 		// Progress Bar
 		///////////////////
 
+
+var sizeConvertor = function (size) {
+	var sizeNom = 0;
+	var nomnom = [' Bytes', ' KB', ' MB', ' GB'];
+
+	while(size > 1024) {
+		sizeNom++;
+		size = size / 1024;
+	}
+	return size.toFixed(1) + nomnom[sizeNom];
+}
+
+
 var progressBar = function (length){
 	count++;
 	if(count % 2 == 0){
@@ -121,9 +136,13 @@ var progressBar = function (length){
 	bar.style.width = filesComplete + '%';
 
 	if(bar.style.width === '100%') {
+		var myNotification = new Notification('You saved ' + sizeConvertor(totalSizeSaved), {
+			body: 'Starting: ' + sizeConvertor(totalFileSize) + ' - Final: ' + sizeConvertor(totalKrakedSize)
+		});
 		setTimeout(function(){
 			bar.style.width = '0%';
 		}, 1500)
+
 	}
 };
 
@@ -135,7 +154,6 @@ var krakenize = function (file, length) {
 
 	var opts = {	file: fs.createReadStream(file.path),
 		wait: true
-		//dev: true
 	};
 
 	var filename = path.format({
@@ -143,9 +161,13 @@ var krakenize = function (file, length) {
 		dir: file.naming.dir,
 		base: file.naming.base
 	});
+	progressBar(length);
 
 	kraken.upload(opts, function(data){
 		if (data.success){
+			totalFileSize += data.original_size;
+			totalKrakedSize += data.kraked_size;
+			totalSizeSaved += data.saved_bytes;
 			progressBar(length);
 			console.log('Success. Optimized image URL: %s', data.kraked_url);
 			var krakedFile = fs.createWriteStream(filename);
@@ -153,6 +175,7 @@ var krakenize = function (file, length) {
 				res.pipe(krakedFile);
 				progressBar(length);
 			});
+			console.log(data);
 			return data;
 		} else {
 			console.log('Fail. Error Message: %s', data.message);
@@ -165,7 +188,10 @@ var krakenize = function (file, length) {
 		///////////////////
 
 var filesDropped = function (e) {
-	count = 0;
+	count = 0,
+	totalFileSize = 0,
+	totalSizeSaved = 0;
+
 	e.preventDefault();
 	var fileDrop = e.dataTransfer.files,
 			workingFiles = [],
@@ -240,6 +266,7 @@ var filesDropped = function (e) {
 			}
 		}
 	}
+	document.getElementById('progress__bar').style.width = '1%';
 	for (file in fileArray){
 		krakenize(fileArray[file], fileArray.length, file);
 	}

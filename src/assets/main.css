@@ -22,11 +22,19 @@ body {
 #window__close {
 	width: 1em;
 	height: 1em;
-	background: url(icon_close.png) center center no-repeat;
+	background: #fff url(icon_close.png) center center no-repeat;
 	background-size: contain;
 	position: absolute;
-	top: 0.5em;
-	left: 0.5em;
+	border: 0.3em solid #fff;
+	top: 0;
+	left: 0;
+	border-radius: 0 0 5px 0;
+}
+
+#window__close:hover {
+	background-color: #edecec;
+	border-color: #edecec;
+
 }
 
 
